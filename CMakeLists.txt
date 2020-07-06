@@ -40,6 +40,7 @@ find_package(OpenSSL REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/iniparser/)
 
 #Build the server
 add_executable(srt_to_udp_server main.cpp)
