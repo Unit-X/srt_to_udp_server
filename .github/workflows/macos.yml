@@ -21,4 +21,8 @@ jobs:
       run: cmake -DCMAKE_BUILD_TYPE=Release .
     - name: make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: srt_to_udp_server
+        path: ./srt_to_udp_server
     
