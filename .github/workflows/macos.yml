@@ -13,6 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: set OpenSSL environment variable
+      uses: allenevans/set-env@v1.0.0
+      with:
+        OPENSSL_ROOT_DIR: '/usr/local/opt/openssl'
     - name: CMake set-up
       run: cmake -DCMAKE_BUILD_TYPE=Release .
     - name: make
