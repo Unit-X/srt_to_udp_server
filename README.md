@@ -10,6 +10,14 @@ Acts as a SRT server and bridges incomming SRT data to UDP
 
 ![Windows x64](https://github.com/Unit-X/srt_to_udp_server/workflows/Windows%20x64/badge.svg)
 
+Get the latest binary by->
+
+1. Click the 'Actions' tab above
+2. Select your platform (to the left)
+3. Select the latest build (If you don't know what you're looking for)
+4. Downlod the binary under the Artifacts text.
+
+
 ## Building
 
 Requires cmake version >= **3.10** and **C++17**
@@ -36,15 +44,15 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . --config Debug
 ```
 
-##Output (Linux and MacOS): 
+**Output (Linux and MacOS):**
  
-**./srt\_to\_udp\_server**
+*./srt\_to\_udp\_server*
 
-##Output (Windows): 
+**Output (Windows):** 
  
-**./Release/srt\_to\_udp\_server.exe** (Release version)
+*./Release/srt\_to\_udp\_server.exe* (Release version)
  
-**./Debug/srt\_to\_udp\_server.exe** (Debug version)
+*./Debug/srt\_to\_udp\_server.exe* (Debug version)
 
 
 -
@@ -101,7 +109,7 @@ choco install git
 Edit the configuration file
 
 ```
-[config1] 				//Unique name must contain the word 'config'
+[config1] 			//Unique name must contain the word 'config'
 listen_port=8000 		//SRT listening port
 listen_ip=0.0.0.0 		//SRT listening IP
 out_port=8100			//UDP send target port
