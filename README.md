@@ -4,6 +4,11 @@ Acts as a SRT server and bridges incomming SRT data to UDP
 
 **Current auto build status:**
 
+![Ubuntu 18.04](https://github.com/Unit-X/srt_to_udp_server/workflows/Ubuntu%2018.04/badge.svg)
+
+![MacOS](https://github.com/Unit-X/srt_to_udp_server/workflows/MacOS/badge.svg)
+
+![Windows x64](https://github.com/Unit-X/srt_to_udp_server/workflows/Windows%20x64/badge.svg)
 
 ## Building
 
