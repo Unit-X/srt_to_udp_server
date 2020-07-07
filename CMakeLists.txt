@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.10)
 project(srt_to_udp_server)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -9,6 +9,8 @@ IF( NOT CMAKE_BUILD_TYPE )
             "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
             FORCE)
 ENDIF()
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 #Include cppSRTWrapper
 include(ExternalProject)

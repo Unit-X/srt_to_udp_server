@@ -101,13 +101,13 @@ choco install git
 Edit the configuration file
 
 ```
-[config1] 			//Unique name must contain the word 'config'
-listen_port=8000 	//SRT listening port
-listen_ip=0.0.0.0 	//SRT listening IP
+[config1] 				//Unique name must contain the word 'config'
+listen_port=8000 		//SRT listening port
+listen_ip=0.0.0.0 		//SRT listening IP
 out_port=8100			//UDP send target port
 out_ip=127.0.0.1		//UDP send target port
-key=th15i$4k3y 		//PSK used
-reorder_distance=4 	//Server SRT reorder tollerance
+key=th15i$4k3y 			//PSK used
+reorder_distance=4 		//Server SRT reorder tollerance
 [new server]..... and so on.
 ```
 
