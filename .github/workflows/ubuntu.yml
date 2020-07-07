@@ -1,0 +1,18 @@
+
+name: Ubuntu 18.04
+
+on: [push]
+
+jobs:
+  buildubuntu:
+    name: build_ubuntu_18.04
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install
+      run: sudo apt -y install tclsh pkg-config libssl-dev
+    - name: cmake
+      run: cmake -DCMAKE_BUILD_TYPE=Release .
+    - name: make
+      run: make
+      
