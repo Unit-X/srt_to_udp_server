@@ -2,7 +2,7 @@
 
 Acts as a SRT server and bridges incomming SRT data to UDP
 
-The benefit of this program compared to the built in SRT conversion is that you can start 
+The benefit of this program compared to the built in SRT conversion is that you can process multiple flows from one instance. This solution also got a rest interface making it simpler to integrate and monitor in cloud environments. 
 
 **Current auto build status:**
 
@@ -11,6 +11,8 @@ The benefit of this program compared to the built in SRT conversion is that you 
 ![MacOS](https://github.com/Unit-X/srt_to_udp_server/workflows/MacOS/badge.svg)
 
 ![Windows x64](https://github.com/Unit-X/srt_to_udp_server/workflows/Windows%20x64/badge.svg)
+
+![CentOS7](https://github.com/Unit-X/srt_to_udp_server/workflows/CentOS7/badge.svg)
 
 Get the latest binary by->
 
