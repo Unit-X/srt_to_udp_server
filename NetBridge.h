@@ -34,7 +34,7 @@ public:
 
 
     Config mCurrentConfig;
-    std::atomic<uint64_t> mPacketsSinceLastTime;
+    std::atomic<uint64_t> mPacketCounter;
 
 private:
     SRTNet mSRTServer;

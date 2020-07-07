@@ -44,9 +44,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/iniparser/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/kissnet/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/restapi/)
 
 #Build the server
-add_executable(srt_to_udp_server NetBridge.cpp main.cpp)
+add_executable(srt_to_udp_server NetBridge.cpp main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/restapi/RESTInterface.cpp)
 IF (WIN32)
     target_link_libraries(srt_to_udp_server srtnet ${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/${CMAKE_BUILD_TYPE}/srt_static.lib ${OPENSSL_LIBRARIES} Threads::Threads)
 ELSE()

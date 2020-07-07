@@ -1,6 +1,9 @@
 #include <iostream>
+#include <sstream>
+
 #include "INI.h"
 #include "NetBridge.h"
+#include "RESTInterface.hpp"
 
 //Version
 #define MAJOR_VERSION 1
@@ -37,6 +40,23 @@ void printUsage() {
     std::cout << "(Executable) configuration.ini" << std::endl;
 }
 
+json getStats(std::string cmdString) {
+    json j;
+    if (cmdString == "dumpall") {
+        uint64_t lConnectionCounter = 1;
+        for (auto &rBridge: gBridges) {
+            NetBridge::Stats lStats=rBridge->getStats();
+            std::ostringstream lHandle;
+            lHandle << "connection" << unsigned(lConnectionCounter);
+            j[lHandle.str().c_str()]["pkt_cnt"] = lStats.mPacketCounter;
+            j[lHandle.str().c_str()]["clnt_cnt"] = lStats.mConnections;
+            j[lHandle.str().c_str()]["net_port"] = rBridge->mCurrentConfig.mListenPort;
+            lConnectionCounter++;
+        }
+    }
+    return j;
+}
+
 int main(int argc, char *argv[]) {
     std::cout << "SRT -> UDP Bridge V." << unsigned(MAJOR_VERSION) << "." <<  unsigned(MINOR_VERSION) << std::endl;
     NetBridge lNetBridge;
@@ -62,6 +82,16 @@ int main(int argc, char *argv[]) {
 
     if (!startSystem(ini)) {
         std::cout << "Failed parsing configuration." << lCommand << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::string lRestIP = ini["restif"]["rest_ip"];
+    int lRestPort = std::stoi(ini["restif"]["rest_port"]);
+
+    RESTInterface lRESTInterface;
+    lRESTInterface.getStatsCallback=std::bind(&getStats, std::placeholders::_1);
+    if (!lRESTInterface.startServer(lRestIP.c_str(), lRestPort, "/restapi/version1", "superSecret")) {
+        std::cout << "REST interface did not start." << std::endl;
         return EXIT_FAILURE;
     }
 

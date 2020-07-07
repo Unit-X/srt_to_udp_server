@@ -39,7 +39,7 @@ std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr
 
 //Data callback.
 bool NetBridge::handleData(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
-    mPacketsSinceLastTime++;
+    mPacketCounter++;
     mNetOut->send((const std::byte *)content->data(), content->size());
     //We should test if sending UDP works..
     return true;
@@ -56,7 +56,7 @@ bool NetBridge::startBridge(Config &rConfig) {
     mNetOut = std::make_shared<kissnet::udp_socket>(kissnet::endpoint(rConfig.mOutIp, rConfig.mOutPort));
 
     mCurrentConfig = rConfig;
-    mPacketsSinceLastTime = 0;
+    mPacketCounter = 0;
 
     return true;
 }
@@ -67,8 +67,7 @@ void NetBridge::stopBridge() {
 
 NetBridge::Stats NetBridge::getStats() {
     NetBridge::Stats lStats;
-    lStats.mPacketCounter = mPacketsSinceLastTime;
-    mPacketsSinceLastTime = 0;
+    lStats.mPacketCounter = mPacketCounter;
     mSRTServer.getActiveClients([&](std::map<SRTSOCKET, std::shared_ptr<NetworkConnection>> &clientList)
                                     {
                                         lStats.mConnections = clientList.size();
