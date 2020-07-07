@@ -87,10 +87,11 @@ int main(int argc, char *argv[]) {
 
     std::string lRestIP = ini["restif"]["rest_ip"];
     int lRestPort = std::stoi(ini["restif"]["rest_port"]);
+    std::string lRestSecret = ini["restif"]["rest_secret"];
 
     RESTInterface lRESTInterface;
     lRESTInterface.getStatsCallback=std::bind(&getStats, std::placeholders::_1);
-    if (!lRESTInterface.startServer(lRestIP.c_str(), lRestPort, "/restapi/version1", "superSecret")) {
+    if (!lRESTInterface.startServer(lRestIP.c_str(), lRestPort, "/restapi/version1", lRestSecret)) {
         std::cout << "REST interface did not start." << std::endl;
         return EXIT_FAILURE;
     }

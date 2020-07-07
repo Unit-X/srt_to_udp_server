@@ -2,6 +2,8 @@
 
 Acts as a SRT server and bridges incomming SRT data to UDP
 
+The benefit of this program compared to the built in SRT conversion is that you can start 
+
 **Current auto build status:**
 
 ![Ubuntu 18.04](https://github.com/Unit-X/srt_to_udp_server/workflows/Ubuntu%2018.04/badge.svg)
@@ -14,7 +16,7 @@ Get the latest binary by->
 
 1. Click the 'Actions' tab above
 2. Select your platform (to the left)
-3. Select the latest build (If you don't know what you're looking for)
+3. Select the latest build (If you don't know what you're looking for, it's the top most item in the list of builds)
 4. Downlod the binary under the Artifacts text.
 
 
@@ -109,6 +111,12 @@ choco install git
 Edit the configuration file
 
 ```
+//One part must contain the REST server configuration
+[restif]
+rest_ip = 127.0.0.1 		//Listen interface for the REST server
+rest_port = 8080			//Listen port for the REST server
+rest_secret = superSecret	//The secret token to be used for the command API
+
 [config1] 			//Unique name must contain the word 'config'
 listen_port=8000 		//SRT listening port
 listen_ip=0.0.0.0 		//SRT listening IP
@@ -119,6 +127,7 @@ reorder_distance=4 		//Server SRT reorder tollerance
 [new server]..... and so on.
 ```
 
+
 Then start the server:
 
 ```sh
@@ -128,6 +137,11 @@ Then start the server:
 
 ```
 
+Talk to the REST API like this:
+
+```sh
+curl --header "Content-Type: application/json" --request POST --data '{"token":"superSecret","command":"dumpall"}' http://127.0.0.1:8080/restapi/version1
+```
 
 
 ## License
