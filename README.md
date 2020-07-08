@@ -187,8 +187,8 @@ key=th15i$4k3y
 reorder_distance=4
 //The tag key is optional and puts the config into MPSRTTS mode
 tag = 8
-//This is a configuration for server worker 2.. This will put the server into MPEG-TS mode since no key is defined
-//a MPSRTTS configuration can be attached a flow. The flow must be entered after the configuration block in this file
+//a MPSRTTS configuration can be attached a flow. The flow must be entered after the configuration block
+//The flow configures what to bind to. What tag should be served and the output if and port
 [flow1]
 bind_to=config1
 out_port=8102
