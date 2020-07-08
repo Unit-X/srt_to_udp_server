@@ -2,7 +2,32 @@
 
 Acts as a SRT server and bridges incomming SRT data to UDP
 
-The benefit of this program compared to the built in SRT conversion is that you can process multiple flows from one instance. This solution also got a rest interface making it simpler to integrate and monitor in cloud environments. 
+The benefit of this program compared to the built in SRT conversion is that you can process multiple flows from one instance. This solution also implements a REST interface making it simpler to integrate and monitor in cloud environments. 
+
+This implementation also introduce a concept of MPSRTTS (Multi Program SRT Transport Streams) instead of regular MPEG style MPTS. The new concept multiplex multiple SPTS (Or MPTS ) to a single SRT flow creating a multiple program single SRT stream. This to avoid multiple SRT network flows unaware of each other fighting over the same resources at the aggregation points where bandwidth is scarce. This aproach is also simplifying the firewall configuration as only one port needs to be configured.
+
+MPEG-TS mode (no tag see below)
+
+```
+MPEG-TS -> SRT -> UDP
+
+MPEG-TS packets
+tsPacket[188]
+```
+
+MPSRTTS mode (Aggregating MPEG-TS to a single SRT flow)
+
+```
+MPEG-TS \      /  MPEG-TS -> UDP
+MPEG-TS -> SRT -> MPEG-TS -> UDP
+MPEG-TS /      \  MPEG-TS -> UDP
+
+MPSRTTS packets are 189 bytes
+
+uint8_t tag
+tsPacket[188]
+
+```
 
 **Current auto build status:**
 
@@ -110,7 +135,16 @@ choco install git
 ## Using the SRT -> UDP bridge
 
 
-Edit the configuration file
+Create a configuration file
+
+Example of MPEG-TS mode transparent mapping where 1 SRT connection in is 1 UDP connection out.
+
+This configuration is creating a server listening on all interfaces and port 800 for incomming SRT clients. The key 'th15i$4k3y' is used for AES-128 encryption.
+
+The data comming in is sent out on interface 127.0.0.1 port 8100
+
+There is also a rest interface configured listening at 127.0.0.1:8080
+
 
 ```
 //One part must contain the REST server configuration
@@ -128,6 +162,45 @@ key=th15i$4k3y 			//PSK used
 reorder_distance=4 		//Server SRT reorder tollerance
 [new server]..... and so on.
 ```
+
+Example of a MPSRTTS configuration
+
+REST interface as above
+
+The server is as above but there is a 'tag' key configured this means that the server [config1] is put into MPSRTTS mode and the incomming data needs to be 189*X where the extra byte is a preamble infront of the TS packet with the uint8_t tag number.
+
+flowx attached outputs to the server. Tags can be reused if for example a MPEG-TS flow has more than one destination.
+
+```
+//This is the configuration for the REST interface
+[restif]
+rest_ip = 127.0.0.1
+rest_port = 8080
+rest_secret = superSecret
+//This is a configuration for server worker 1
+[config1]
+listen_port=8000
+listen_ip=0.0.0.0
+out_port=8100
+out_ip=127.0.0.1
+key=th15i$4k3y
+reorder_distance=4
+//The tag key is optional and puts the config into MPSRTTS mode
+tag = 8
+//This is a configuration for server worker 2.. This will put the server into MPEG-TS mode since no key is defined
+//a MPSRTTS configuration can be attached a flow. The flow must be entered after the configuration block in this file
+[flow1]
+bind_to=config1
+out_port=8102
+out_ip=127.0.0.1
+tag = 11
+[flow2]
+bind_to=config1
+out_port=8103
+out_ip=127.0.0.1
+tag = 14
+```
+
 
 
 Then start the server:
