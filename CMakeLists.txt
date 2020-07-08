@@ -54,3 +54,11 @@ ELSE()
     target_link_libraries(srt_to_udp_server srtnet ${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/libsrt.a ${OPENSSL_LIBRARIES} Threads::Threads)
 ENDIF()
 
+#Build the MPSRTTEST code
+add_executable(mpsrtts_test NetBridge.cpp test_mpsrtts.cpp ${CMAKE_CURRENT_SOURCE_DIR}/restapi/RESTInterface.cpp)
+IF (WIN32)
+    target_link_libraries(mpsrtts_test srtnet ${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/${CMAKE_BUILD_TYPE}/srt_static.lib ${OPENSSL_LIBRARIES} Threads::Threads)
+ELSE()
+    target_link_libraries(mpsrtts_test srtnet ${CMAKE_CURRENT_SOURCE_DIR}/srtwrap/srt/libsrt.a ${OPENSSL_LIBRARIES} Threads::Threads)
+ENDIF()
+

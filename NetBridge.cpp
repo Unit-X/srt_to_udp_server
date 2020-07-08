@@ -65,7 +65,7 @@ bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &conten
     //Place the TS packets in respective tags queue
     for (int x = 0; x < (int)packets ; x++) {
         uint8_t tag = content->data()[x*189];
-        std::vector<uint8_t> lPacket(content->data()+(x*189)+1,content->data()+(x*189)+188);
+        std::vector<uint8_t> lPacket(content->data()+(x*189)+1,content->data()+(x*189)+189);
         mTSPackets[tag].push_back(lPacket);
     }
 
@@ -75,8 +75,8 @@ bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &conten
         if (rPackets.second.size() >= 7) {
             //We should send the data now
             for (int x = 0; x < 7 ; x++) {
-               memmove(lSendData.data()+(188*x),rPackets.second.data(),188);
-               rPackets.second.pop_back();
+               memmove(lSendData.data()+(188*x),rPackets.second.data()[0].data(),188);
+                rPackets.second.erase(rPackets.second.begin());
             }
             uint8_t tag = rPackets.first;
             for (auto &rConnection: mConnections) {
@@ -124,7 +124,7 @@ void NetBridge::stopBridge() {
     mSRTServer.stop();
 }
 bool NetBridge::addInterface(Config &rConfig) {
-    if (rConfig.mMode != Mode::MPSRTTS) {
+    if (mCurrentMode != Mode::MPSRTTS) {
         return false;
     }
     //Add the out put connection

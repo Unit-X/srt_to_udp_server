@@ -76,7 +76,6 @@ json getStats(std::string cmdString) {
 
 int main(int argc, char *argv[]) {
     std::cout << "SRT -> UDP Bridge V." << unsigned(MAJOR_VERSION) << "." <<  unsigned(MINOR_VERSION) << std::endl;
-    NetBridge lNetBridge;
 
     if (argc != 2) {
         printUsage();
