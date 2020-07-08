@@ -137,11 +137,11 @@ choco install git
 
 Create a configuration file
 
-Example of MPEG-TS mode transparent mapping where 1 SRT connection in is 1 UDP connection out.
+Example of MPEG-TS mode transparent mapping where 1 SRT connection in and 1 UDP stream out.
 
-This configuration is creating a server listening on all interfaces and port 800 for incomming SRT clients. The key 'th15i$4k3y' is used for AES-128 encryption.
+This configuration is creating a server listening on all interfaces and port 8000 for incomming SRT clients. The key 'th15i$4k3y' is used for AES-128 encryption.
 
-The data comming in is sent out on interface 127.0.0.1 port 8100
+The data comming in is sent out on interface 127.0.0.1 port 8100. The content can be whatever since the mapping from SRT to UDP is transparent.
 
 There is also a rest interface configured listening at 127.0.0.1:8080
 
@@ -167,9 +167,9 @@ Example of a MPSRTTS configuration
 
 REST interface as above
 
-The server is as above but there is a 'tag' key configured this means that the server [config1] is put into MPSRTTS mode and the incomming data needs to be 189*X where the extra byte is a preamble infront of the TS packet with the uint8_t tag number.
+The server is configured as above but there is a 'tag' key configured, this means that the server [config1] is put into MPSRTTS-mode and the incomming data needs to be 189*X bytes where the extra byte is a preamble (tag) infront of the TS 188 byte packet.
 
-flowx attached outputs to the server. Tags can be reused if for example a MPEG-TS flow has more than one destination.
+flow(x) attached outputs to the server. Tags can be reused if for example a MPEG-TS flow has more than one destination.
 
 ```
 //This is the configuration for the REST interface
@@ -206,8 +206,6 @@ tag = 14
 Then start the server:
 
 ```sh
-
-#Run the program
 ./Executable configuration.file
 
 ```
