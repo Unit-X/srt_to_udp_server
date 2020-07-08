@@ -5,12 +5,12 @@
 #include "NetBridge.h"
 
 //Return a connection object. (Return nullptr if you don't want to connect to that client)
-std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr &sin, SRTSOCKET newSocket) {
+std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr &rSin, SRTSOCKET lNewSocket) {
 
     char addrIPv6[INET6_ADDRSTRLEN];
 
-    if (sin.sa_family == AF_INET) {
-        struct sockaddr_in* inConnectionV4 = (struct sockaddr_in*) &sin;
+    if (rSin.sa_family == AF_INET) {
+        struct sockaddr_in* inConnectionV4 = (struct sockaddr_in*) &rSin;
         auto *ip = (unsigned char *) &inConnectionV4->sin_addr.s_addr;
         std::cout << "Connecting IPv4: " << unsigned(ip[0]) << "." << unsigned(ip[1]) << "." << unsigned(ip[2]) << "."
                   << unsigned(ip[3]) << std::endl;
@@ -19,8 +19,8 @@ std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr
         //return nullptr;
 
 
-    } else if (sin.sa_family == AF_INET6) {
-        struct sockaddr_in6* inConnectionV6 = (struct sockaddr_in6*) &sin;
+    } else if (rSin.sa_family == AF_INET6) {
+        struct sockaddr_in6* inConnectionV6 = (struct sockaddr_in6*) &rSin;
         inet_ntop(AF_INET6, &inConnectionV6->sin6_addr, addrIPv6, INET6_ADDRSTRLEN);
         printf("Connecting IPv6: %s\n", addrIPv6);
 
@@ -38,38 +38,32 @@ std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr
 }
 
 //Data callback in MPEGTS mode.
-bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
+bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &rMsgCtrl, std::shared_ptr<NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
     mPacketCounter++;
-
-
-    mConnections[0].mNetOut->send((const std::byte *)content->data(), content->size());
-
-    //for (auto &rOut: mNetOut) {
-    //    rOut
-    //}
-
     //We should test if sending UDP works..
+    mConnections[0].mNetOut->send((const std::byte *)rContent->data(), rContent->size());
     return true;
 }
 
 //Data callback in MPSRTTS mode.
-bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
+bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
     mPacketCounter++;
 
-    double packets = (double) content->size() / 189.0;
-    if (packets != (int) packets) {
+    //Did we get the expected size?
+    double lPackets = (double) rContent->size() / 189.0;
+    if (lPackets != (int) lPackets) {
         std::cout << "Payload not X * 189 " << std::endl;
         return true;  //Drop connection?
     }
 
     //Place the TS packets in respective tags queue
-    for (int x = 0; x < (int)packets ; x++) {
-        uint8_t tag = content->data()[x*189];
-        std::vector<uint8_t> lPacket(content->data()+(x*189)+1,content->data()+(x*189)+189);
+    for (int x = 0; x < (int)lPackets ; x++) {
+        uint8_t tag = rContent->data()[x*189];
+        std::vector<uint8_t> lPacket(rContent->data()+(x*189)+1, rContent->data()+(x*189)+189);
         mTSPackets[tag].push_back(lPacket);
     }
 
-    //Check what queue we should empty
+    //Check what queue we should empty if any
     std::vector<uint8_t> lSendData(188*7);
     for (auto &rPackets: mTSPackets) {
         if (rPackets.second.size() >= 7) {
@@ -78,6 +72,7 @@ bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &conten
                memmove(lSendData.data()+(188*x),rPackets.second.data()[0].data(),188);
                 rPackets.second.erase(rPackets.second.begin());
             }
+            //Send to what destination
             uint8_t tag = rPackets.first;
             for (auto &rConnection: mConnections) {
                 if (rConnection.tag == tag) {
@@ -90,7 +85,6 @@ bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &conten
 }
 
 bool NetBridge::startBridge(Config &rConfig) {
-
     //Set the mode, save the config and zero counters
     mCurrentMode = rConfig.mMode;
     mCurrentConfig = rConfig;
@@ -123,6 +117,7 @@ bool NetBridge::startBridge(Config &rConfig) {
 void NetBridge::stopBridge() {
     mSRTServer.stop();
 }
+
 bool NetBridge::addInterface(Config &rConfig) {
     if (mCurrentMode != Mode::MPSRTTS) {
         return false;

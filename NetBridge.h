@@ -10,9 +10,7 @@
 #define MTU 1456 //SRT-max
 
 class NetBridge {
-
 public:
-
     enum Mode: uint8_t {
         Unknown,
         MPEGTS, //SPTS or MPTS
@@ -48,12 +46,10 @@ public:
     bool handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
     Stats getStats();
 
-
     Config mCurrentConfig;
     std::atomic<uint64_t> mPacketCounter;
 
 private:
-
     SRTNet mSRTServer;
     std::vector<Connection> mConnections;
     Mode mCurrentMode;

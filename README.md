@@ -4,9 +4,9 @@ Acts as a SRT server and bridges incomming SRT data to UDP
 
 The benefit of this program compared to the built in SRT conversion is that you can process multiple flows from one instance. This solution also implements a REST interface making it simpler to integrate and monitor in cloud environments. 
 
-This implementation also introduce a concept of MPSRTTS (Multi Program SRT Transport Streams) instead of regular MPEG style MPTS. The new concept multiplex multiple SPTS (Or MPTS ) to a single SRT flow creating a multiple program single SRT stream. This to avoid multiple SRT network flows unaware of each other fighting over the same resources at the aggregation points where bandwidth is scarce. This aproach is also simplifying the firewall configuration as only one port needs to be configured.
+This implementation also introduce a concept of MPSRTTS (Multi Program SRT Transport Streams) instead of regular MPEG style MPTS. The new concept multiplex multiple SPTS (Or MPTS ) to a single SRT flow creating a multiple program single SRT stream. This to avoid multiple SRT network flows unaware of each other fighting over the same resources at the aggregation points where bandwidth is scarce. This aproach can also simplify the firewall configuration in cases where mutliple input flows (meaning incomming MPEG-TS flows to the server) is fed multiple destinations internally.
 
-MPEG-TS mode (no tag see below)
+**MPEG-TS mode** (no tag see below)
 
 ```
 MPEG-TS -> SRT -> UDP
@@ -15,7 +15,7 @@ MPEG-TS packets
 tsPacket[188]
 ```
 
-MPSRTTS mode (Aggregating MPEG-TS to a single SRT flow)
+**MPSRTTS mode** (Aggregating MPEG-TS to a single SRT flow)
 
 ```
 MPEG-TS \      /  MPEG-TS -> UDP
