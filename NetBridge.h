@@ -10,7 +10,19 @@
 #define MTU 1456 //SRT-max
 
 class NetBridge {
+
 public:
+
+    enum Mode: uint8_t {
+        Unknown,
+        MPEGTS, //SPTS or MPTS
+        MPSRTTS //Multiplexed MPEG-TS (SPTS / MPTS) to one SRT stream
+    };
+
+    struct Connection {
+        std::shared_ptr<kissnet::udp_socket> mNetOut = nullptr;
+        uint8_t tag = 0;
+    };
 
     struct Stats {
         uint64_t mPacketCounter = 0;
@@ -24,12 +36,16 @@ public:
         std::string mPsk = "";
         std::string mOutIp = "";
         uint16_t mOutPort = 0;
+        Mode mMode = Mode::Unknown;
+        uint8_t mTag = 0;
     };
 
     bool startBridge(Config &rConfig);
     void stopBridge();
+    bool addInterface(Config &rConfig);
     std::shared_ptr<NetworkConnection> validateConnection(struct sockaddr &sin, SRTSOCKET newSocket);
-    bool handleData(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
+    bool handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
+    bool handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
     Stats getStats();
 
 
@@ -37,8 +53,12 @@ public:
     std::atomic<uint64_t> mPacketCounter;
 
 private:
+
     SRTNet mSRTServer;
-    std::shared_ptr<kissnet::udp_socket> mNetOut = nullptr;
+    std::vector<Connection> mConnections;
+    Mode mCurrentMode;
+    std::map<uint8_t, std::vector<std::vector<uint8_t>>> mTSPackets;
+
 };
 
 #endif //SRT_TO_UDP_SERVER_NETBRIDGE_H

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <sstream>
 
 #include "INI.h"
 #include "NetBridge.h"
@@ -9,7 +8,7 @@
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 0
 
-std::vector<std::shared_ptr<NetBridge>> gBridges;
+std::map<std::string, std::shared_ptr<NetBridge>> gBridges;
 
 bool startSystem(INI &rConfigs) {
     for (auto &rSection: rConfigs.sections) {
@@ -23,12 +22,30 @@ bool startSystem(INI &rConfigs) {
             lConfig.mOutIp = rConfigs[rSection.first]["out_ip"];
             lConfig.mPsk = rConfigs[rSection.first]["key"];
             lConfig.mReorder = std::stoi(rConfigs[rSection.first]["reorder_distance"]);
+
+            std::string tagString = rConfigs[rSection.first]["tag"];
+            if (!tagString.empty()) {
+                lConfig.mMode = NetBridge::Mode::MPSRTTS;
+                lConfig.mTag = std::stoi(tagString);
+            } else {
+                lConfig.mMode = NetBridge::Mode::MPEGTS;
+            }
+
             auto newBridge = std::make_shared<NetBridge>();
             if (!newBridge->startBridge(lConfig)) {
                 std::cout << "Failed starting bridge using config: "  << rSection.first << std::endl;
                 return false;
             }
-            gBridges.push_back(newBridge);
+            gBridges[rSection.first] = newBridge;
+        } else if (sectionName.find("flow") != std::string::npos) {
+            std::string lBindKey = rConfigs[rSection.first]["bind_to"];
+            if ( gBridges.find(lBindKey) != gBridges.end() && !lBindKey.empty() ) {
+                NetBridge::Config lConfig;
+                lConfig.mOutPort = std::stoi(rConfigs[rSection.first]["out_port"]);
+                lConfig.mOutIp = rConfigs[rSection.first]["out_ip"];
+                lConfig.mPsk = rConfigs[rSection.first]["key"];
+                gBridges[lBindKey]->addInterface(lConfig);
+            }
         }
     }
     return true;
@@ -45,12 +62,12 @@ json getStats(std::string cmdString) {
     if (cmdString == "dumpall") {
         uint64_t lConnectionCounter = 1;
         for (auto &rBridge: gBridges) {
-            NetBridge::Stats lStats=rBridge->getStats();
+            NetBridge::Stats lStats=rBridge.second->getStats();
             std::ostringstream lHandle;
             lHandle << "connection" << unsigned(lConnectionCounter);
             j[lHandle.str().c_str()]["pkt_cnt"] = lStats.mPacketCounter;
             j[lHandle.str().c_str()]["clnt_cnt"] = lStats.mConnections;
-            j[lHandle.str().c_str()]["net_port"] = rBridge->mCurrentConfig.mListenPort;
+            j[lHandle.str().c_str()]["net_port"] = rBridge.second->mCurrentConfig.mListenPort;
             lConnectionCounter++;
         }
     }
@@ -102,9 +119,9 @@ int main(int argc, char *argv[]) {
         uint64_t lConnectionCounter = 1;
         std::cout << std::endl;
         for (auto &rBridge: gBridges) {
-            NetBridge::Stats lStats=rBridge->getStats();
+            NetBridge::Stats lStats=rBridge.second->getStats();
             std::cout << "Connection " << unsigned(lConnectionCounter);
-            std::cout << " Port: " << unsigned(rBridge->mCurrentConfig.mListenPort);
+            std::cout << " Port: " << unsigned(rBridge.second->mCurrentConfig.mListenPort);
             std::cout << " Clients: " << unsigned(lStats.mConnections);
             std::cout << " packetCounter: " << unsigned(lStats.mPacketCounter) << std::endl;
             lConnectionCounter ++;

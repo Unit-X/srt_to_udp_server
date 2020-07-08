@@ -37,32 +37,102 @@ std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr
     return a1;
 }
 
-//Data callback.
-bool NetBridge::handleData(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
+//Data callback in MPEGTS mode.
+bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
     mPacketCounter++;
-    mNetOut->send((const std::byte *)content->data(), content->size());
+
+
+    mConnections[0].mNetOut->send((const std::byte *)content->data(), content->size());
+
+    //for (auto &rOut: mNetOut) {
+    //    rOut
+    //}
+
     //We should test if sending UDP works..
     return true;
 }
 
+//Data callback in MPSRTTS mode.
+bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle) {
+    mPacketCounter++;
+
+    double packets = (double) content->size() / 189.0;
+    if (packets != (int) packets) {
+        std::cout << "Payload not X * 189 " << std::endl;
+        return true;  //Drop connection?
+    }
+
+    //Place the TS packets in respective tags queue
+    for (int x = 0; x < (int)packets ; x++) {
+        uint8_t tag = content->data()[x*189];
+        std::vector<uint8_t> lPacket(content->data()+(x*189)+1,content->data()+(x*189)+188);
+        mTSPackets[tag].push_back(lPacket);
+    }
+
+    //Check what queue we should empty
+    std::vector<uint8_t> lSendData(188*7);
+    for (auto &rPackets: mTSPackets) {
+        if (rPackets.second.size() >= 7) {
+            //We should send the data now
+            for (int x = 0; x < 7 ; x++) {
+               memmove(lSendData.data()+(188*x),rPackets.second.data(),188);
+               rPackets.second.pop_back();
+            }
+            uint8_t tag = rPackets.first;
+            for (auto &rConnection: mConnections) {
+                if (rConnection.tag == tag) {
+                    rConnection.mNetOut->send((const std::byte *)lSendData.data(), lSendData.size());
+                }
+            }
+        }
+    }
+    return true;
+}
+
 bool NetBridge::startBridge(Config &rConfig) {
+
+    //Set the mode, save the config and zero counters
+    mCurrentMode = rConfig.mMode;
+    mCurrentConfig = rConfig;
+    mPacketCounter = 0;
+
+    //Start the SRT server
     mSRTServer.clientConnected=std::bind(&NetBridge::validateConnection, this, std::placeholders::_1, std::placeholders::_2);
-    mSRTServer.receivedData=std::bind(&NetBridge::handleData, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+    if (rConfig.mMode == Mode::MPEGTS) {
+        mSRTServer.receivedData = std::bind(&NetBridge::handleDataMPEGTS, this, std::placeholders::_1,
+                                            std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+    } else {
+        mSRTServer.receivedData = std::bind(&NetBridge::handleDataMPSRTTS, this, std::placeholders::_1,
+                                            std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+    }
     if (!mSRTServer.startServer(rConfig.mListenIp, rConfig.mListenPort, rConfig.mReorder, 1000, 100, MTU, rConfig.mPsk)) {
         std::cout << "SRT Server failed to start." << std::endl;
         return false;
     }
 
-    mNetOut = std::make_shared<kissnet::udp_socket>(kissnet::endpoint(rConfig.mOutIp, rConfig.mOutPort));
-
-    mCurrentConfig = rConfig;
-    mPacketCounter = 0;
-
+    //Add the out put connection
+    Connection lConnection;
+    lConnection.mNetOut = std::make_shared<kissnet::udp_socket>(kissnet::endpoint(rConfig.mOutIp, rConfig.mOutPort));
+    if (rConfig.mMode == Mode::MPSRTTS) {
+        lConnection.tag = rConfig.mTag;
+    }
+    mConnections.push_back(lConnection);
     return true;
 }
 
 void NetBridge::stopBridge() {
     mSRTServer.stop();
+}
+bool NetBridge::addInterface(Config &rConfig) {
+    if (rConfig.mMode != Mode::MPSRTTS) {
+        return false;
+    }
+    //Add the out put connection
+    Connection lConnection;
+    lConnection.mNetOut = std::make_shared<kissnet::udp_socket>(kissnet::endpoint(rConfig.mOutIp, rConfig.mOutPort));
+    lConnection.tag = rConfig.mTag;
+    mConnections.push_back(lConnection);
+    return true;
 }
 
 NetBridge::Stats NetBridge::getStats() {
