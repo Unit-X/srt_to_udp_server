@@ -143,10 +143,18 @@ choco install git
 
 # Preparing CentOS
 
-//WIP
 
 ```sh
-sudo yum install wget
+sudo yum -y check-update
+sudo yum -y update
+sudo reboot now
+sudo yum -y groupinstall 'Development Tools'
+git config --global user.name "your name"
+git config --global user.email "your.email@mail.com"
+sudo yum -y install centos-release-scl-rh
+sudo yum -y install devtoolset-9-toolchain
+scl enable devtoolset-9 bash
+sudo yum -y install wget
 wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz
 tar zxvf cmake-3.*
 cd cmake-3.*
@@ -154,17 +162,16 @@ cd cmake-3.*
 make -j$(nproc)
 sudo make install
 sudo ln -s /usr/loca/bin/cmake /usr/bin/cmake
-sudo yum install openssl-devel
-sudo yum install tcl
-sudo yum install tcl-devel
-sudo yum install tk
-sudo yum install tk-devel
-sudo yum groupinstall 'Development Tools'
-sudo yum install devtoolset-9-toolchain
-scl enable devtoolset-9 bash
-git config --global user.name "youur name"
-git config --global user.email "your.email@mail.com"
+cd ..
+sudo yum -y install openssl-devel
+sudo yum -y install tcl-devel
+sudo yum -y install tk-devel
+```
 
+If you reboot your CentOS machine and need to build again. Before building you need to ->
+
+```sh
+scl enable devtoolset-9 bash
 ```
 
 
