@@ -2,11 +2,13 @@
 
 #SRT to UDP Server
 
-Acts as a SRT server and bridges incomming SRT data to UDP
+Acts as a SRT server and bridges incoming SRT data to UDP
 
-The benefit of this program compared to the built in SRT conversion is that you can process multiple flows from one instance. This solution also implements a REST interface making it simpler to integrate and monitor in cloud environments. 
+The benefit of this program compared to the included converter in the SRT repo. is that you can process multiple flows from one instance. This solution also implements a REST interface making it simpler to integrate and monitor in cloud environments. 
 
-This implementation also introduce a concept of MPSRTTS (Multi Program SRT Transport Streams) instead of regular MPEG style MPTS. The new concept multiplex multiple SPTS (Or MPTS ) to a single SRT flow creating a multiple program single SRT stream. This to avoid multiple SRT network flows unaware of each other fighting over the same resources at the aggregation points where bandwidth is scarce. This aproach can also simplify the firewall configuration in cases where mutliple input flows (meaning incomming MPEG-TS flows to the server) is fed multiple destinations internally.
+The implementation also introduces a concept of MPSRTTS (Multi Program SRT Transport Streams) instead of regular MPEG style SPTS squashing to MPTS. The new concept multiplex multiple SPTS (or MPTS!) to a single SRT flow creating a multiple program single SRT stream. This to avoid multiple SRT network flows unaware of each other fighting over the same resources at the aggregation points where bandwidth is scarce. If you are familiar with Ethernets VLAN concept this can be seen as a equivalent for MPEG-TS flows.
+This approach may in some cases also simplify the firewall configuration in situations where multiple input flows (meaning incoming SPTS/MPTS over SRT) is fed multiple destinations.
+
 
 **MPEG-TS mode** (no tag see below)
 
@@ -15,6 +17,9 @@ MPEG-TS -> SRT -> UDP
 
 MPEG-TS packets
 tsPacket[188]
+
+(To the size of the MTU. Normally seven TS packets, 7*188 meaning a payload size of 1316 bytes)
+
 ```
 
 **MPSRTTS mode** (Aggregating MPEG-TS to a single SRT flow)
@@ -29,6 +34,8 @@ MPSRTTS packets are 189 bytes
 uint8_t tag
 tsPacket[188]
 
+(To the size of the MTU. Normally Normally seven TS packets, 7*189 meaning a payload of 1323 bytes)
+
 ```
 
 **Current auto build status:**
@@ -41,7 +48,7 @@ tsPacket[188]
 
 ![CentOS7](https://github.com/Unit-X/srt_to_udp_server/workflows/CentOS7/badge.svg)
 
-Get the latest binary by->
+The auto builds produces binaries, get the binary based on the last commit by->
 
 1. Click the 'Actions' tab above
 2. Select your platform (to the left)
@@ -88,7 +95,8 @@ cmake --build . --config Debug
 
 -
 
-# Preparing Linux
+
+# Preparing Ubuntu (Deb)
 
 ```sh
 sudo apt-get update
@@ -133,23 +141,51 @@ choco install cmake
 choco install git
 ```
 
+# Preparing CentOS
+
+//WIP
+
+```sh
+sudo yum install wget
+wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz
+tar zxvf cmake-3.*
+cd cmake-3.*
+./bootstrap --prefix=/usr/loca
+make -j$(nproc)
+sudo make install
+sudo ln -s /usr/loca/bin/cmake /usr/bin/cmake
+sudo yum install openssl-devel
+sudo yum install tcl
+sudo yum install tcl-devel
+sudo yum install tk
+sudo yum install tk-devel
+sudo yum groupinstall 'Development Tools'
+sudo yum install devtoolset-9-toolchain
+scl enable devtoolset-9 bash
+git config --global user.name "youur name"
+git config --global user.email "your.email@mail.com"
+
+```
+
+
+
 
 ## Using the SRT -> UDP bridge
 
 
 Create a configuration file
 
-Example of MPEG-TS mode transparent mapping where 1 SRT connection in and 1 UDP stream out.
+Below is a example of MPEG-TS mode transparent mapping where the server accepts 1 SRT connection in and produces 1 UDP stream out.
 
-This configuration is creating a server listening on all interfaces and port 8000 for incomming SRT clients. The key 'th15i$4k3y' is used for AES-128 encryption.
+This configuration is creating a server listening on all interfaces and port 8000 for incomming SRT clients. The key *th15i$4k3y* is used for AES-128 encryption.
 
-The data comming in is sent out on interface 127.0.0.1 port 8100. The content can be whatever since the mapping from SRT to UDP is transparent.
+The data comming in is sent out on interface 127.0.0.1 port 8100. The payload content can be whatever since the mapping from SRT to UDP is transparent meaning it can be anything MPEG-TS or something else.
 
 There is also a rest interface configured listening at 127.0.0.1:8080
-
+For accessing the REST interface see below.
 
 ```
-//One part must contain the REST server configuration
+//One part must contain the REST server configuration. Without it the program will not start.
 [restif]
 rest_ip = 127.0.0.1 		//Listen interface for the REST server
 rest_port = 8080			//Listen port for the REST server
@@ -212,7 +248,22 @@ Then start the server:
 
 ```
 
+**REST API:**
+
 Talk to the REST API like this:
+
+```
+(key:value)
+token:(your secret as defined in the ini file)
+command:(The command you want to execute)
+
+Current commands:
+
+dumpall
+Returns statistics about all current running servers
+```
+
+//Example
 
 ```sh
 curl --header "Content-Type: application/json" --request POST --data '{"token":"superSecret","command":"dumpall"}' http://127.0.0.1:8080/restapi/version1
