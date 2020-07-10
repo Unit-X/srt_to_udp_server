@@ -43,7 +43,14 @@ bool startSystem(INI &rConfigs) {
                 NetBridge::Config lConfig;
                 lConfig.mOutPort = std::stoi(rConfigs[rSection.first]["out_port"]);
                 lConfig.mOutIp = rConfigs[rSection.first]["out_ip"];
-                lConfig.mPsk = rConfigs[rSection.first]["key"];
+                std::string tagString = rConfigs[rSection.first]["tag"];
+                if (!tagString.empty()) {
+                    lConfig.mMode = NetBridge::Mode::MPSRTTS;
+                    lConfig.mTag = std::stoi(tagString);
+                } else {
+                    std::cout << "Tag missing: "  << rSection.first << std::endl;
+                    return false;
+                }
                 gBridges[lBindKey]->addInterface(lConfig);
             }
         }
