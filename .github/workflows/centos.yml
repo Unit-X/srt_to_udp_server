@@ -5,13 +5,31 @@ on: [push]
 jobs:
   buildubuntu:
     name: build_centos_7
-    runs-on: centos7
+    runs-on: ubuntu-latest
+    container: centos:7
     steps:
     - uses: actions/checkout@v2
+    - name: prepare
+      run: |
+        yum --setopt=group_package_types=mandatory,default,optional -y groupinstall 'Development Tools'
+        yum -y install centos-release-scl
+        yum -y install devtoolset-9-toolchain
+        scl enable devtoolset-9 'bash -c "
+          yum -y install openssl-devel tk-devel tcl-devel wget
+          wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz
+          tar zxf cmake-3.*
+          cd cmake-3.*
+          ./bootstrap --prefix=/usr/local 1>/dev/null
+          make -j$(nproc) --silent
+          make install --silent
+          cd ..
+        "'
     - name: cmake
-      run: cmake -DCMAKE_BUILD_TYPE=Release .
+      run: |
+        scl enable devtoolset-9 'bash -c "cmake -DCMAKE_BUILD_TYPE=Release ."'
     - name: make
-      run: make
+      run: |
+        scl enable devtoolset-9 make
     - uses: actions/upload-artifact@v2
       with:
         name: srt_to_udp_server
