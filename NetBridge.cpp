@@ -5,7 +5,7 @@
 #include "NetBridge.h"
 
 //Return a connection object. (Return nullptr if you don't want to connect to that client)
-std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr &rSin, SRTSOCKET lNewSocket) {
+std::shared_ptr<SRTNet::NetworkConnection> NetBridge::validateConnection(struct sockaddr &rSin, SRTSOCKET lNewSocket) {
 
     char addrIPv6[INET6_ADDRSTRLEN];
 
@@ -32,13 +32,13 @@ std::shared_ptr<NetworkConnection> NetBridge::validateConnection(struct sockaddr
         return nullptr;
     }
 
-    auto a1 = std::make_shared<NetworkConnection>();
+    auto a1 = std::make_shared<SRTNet::NetworkConnection>();
    // a1->object = std::make_shared<MyClass>();
     return a1;
 }
 
 //Data callback in MPEGTS mode.
-bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &rMsgCtrl, std::shared_ptr<NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
+bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &rMsgCtrl, std::shared_ptr<SRTNet::NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
     mPacketCounter++;
     //We should test if sending UDP works..
     mConnections[0].mNetOut->send((const std::byte *)rContent->data(), rContent->size());
@@ -46,7 +46,7 @@ bool NetBridge::handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &rConten
 }
 
 //Data callback in MPSRTTS mode.
-bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
+bool NetBridge::handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &rContent, SRT_MSGCTRL &msgCtrl, std::shared_ptr<SRTNet::NetworkConnection> lCtx, SRTSOCKET lClientHandle) {
     mPacketCounter++;
 
     //Did we get the expected size?
@@ -133,7 +133,7 @@ bool NetBridge::addInterface(Config &rConfig) {
 NetBridge::Stats NetBridge::getStats() {
     NetBridge::Stats lStats;
     lStats.mPacketCounter = mPacketCounter;
-    mSRTServer.getActiveClients([&](std::map<SRTSOCKET, std::shared_ptr<NetworkConnection>> &clientList)
+    mSRTServer.getActiveClients([&](std::map<SRTSOCKET, std::shared_ptr<SRTNet::NetworkConnection>> &clientList)
                                     {
                                         lStats.mConnections = clientList.size();
                                     }
