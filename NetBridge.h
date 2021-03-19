@@ -41,9 +41,9 @@ public:
     bool startBridge(Config &rConfig);
     void stopBridge();
     bool addInterface(Config &rConfig);
-    std::shared_ptr<NetworkConnection> validateConnection(struct sockaddr &sin, SRTSOCKET newSocket);
-    bool handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
-    bool handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> ctx, SRTSOCKET clientHandle);
+    std::shared_ptr<SRTNet::NetworkConnection> validateConnection(struct sockaddr &sin, SRTSOCKET newSocket);
+    bool handleDataMPEGTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<SRTNet::NetworkConnection> ctx, SRTSOCKET clientHandle);
+    bool handleDataMPSRTTS(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<SRTNet::NetworkConnection> ctx, SRTSOCKET clientHandle);
     Stats getStats();
 
     Config mCurrentConfig;

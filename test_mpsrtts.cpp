@@ -67,7 +67,7 @@ bool startSystem(INI &rConfigs) {
     return true;
 }
 
-void handleDataClient(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<NetworkConnection> &ctx, SRTSOCKET serverHandle) {
+void handleDataClient(std::unique_ptr <std::vector<uint8_t>> &content, SRT_MSGCTRL &msgCtrl, std::shared_ptr<SRTNet::NetworkConnection> &ctx, SRTSOCKET serverHandle) {
     std::cout << "FYI. Got data ->" << content->size() << std::endl;
 }
 
@@ -259,7 +259,7 @@ int main() {
     }
 
     gSRTNetClient.receivedData=std::bind(&handleDataClient, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-    auto clientConnection=std::make_shared<NetworkConnection>();
+    auto clientConnection=std::make_shared<SRTNet::NetworkConnection>();
     if (!gSRTNetClient.startClient("127.0.0.1", 8000, 16, 1000, 100,clientConnection, 1456,"th15i$4k3y")) {
         std::cout << "SRT client1 failed starting." << std::endl;
         return EXIT_FAILURE;
